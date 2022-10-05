@@ -13,7 +13,7 @@
 struct memoryList
 {
   // doubly-linked list
-  struct memoryList *last;
+  struct memoryList *prev;
   struct memoryList *next;
 
   int size;            // How many bytes in this block?
@@ -29,7 +29,8 @@ size_t mySize;
 void *myMemory = NULL;
 
 static struct memoryList *head;
-static struct memoryList *next;
+static struct memoryList *tail;
+//static struct memoryList *next;   Old from Bhupjit, guess it should be tail
 
 
 /* initmem must be called prior to mymalloc and myfree.
