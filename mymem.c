@@ -116,38 +116,67 @@ void myfree(void* block)
  */
 
 /* Get the number of contiguous areas of free space in memory. */
-int mem_holes()
-{
-	return 0;
+// Iterate list every block and count '0' allocs
+int mem_holes() {
+    int count = 0;
+    struct memoryList *current = head;
+    while(current->next != NULL) {
+        if (current->alloc == '0') {
+            count++;
+        }
+        current = current->next;
+    }
+	return count;
 }
 
 /* Get the number of bytes allocated */
-int mem_allocated()
-{
-	return 0;
+// Might have misunderstood, but this is calculating allocated size and not the number of allocated blocks as guide suggests
+int mem_allocated() {
+    return mySize - mem_free();
 }
 
 /* Number of non-allocated bytes */
-int mem_free()
-{
-	return 0;
+// Iterate list and count non-allocated size
+int mem_free() {
+    int size = 0;
+    struct memoryList *current = head;
+    while(current->next != NULL) {
+        if (current->alloc == '0')
+            size += current->size;
+        current = current->next;
+    }
+	return size;
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
-int mem_largest_free()
-{
-	return 0;
+// Iterate list and track of largest unallocated block
+int mem_largest_free() {
+    int max = 0;
+    struct memoryList *current = head;
+    while(current->next != NULL) {
+        if((current->alloc == '0') && (current->size > max))
+            max = current->size;
+        current = current->next;
+    }
+	return max;
 }
 
 /* Number of free blocks smaller than or equal to "size" bytes. */
-int mem_small_free(int size)
-{
-	return 0;
+// Iterate list and increment counter when block size < size
+int mem_small_free(int size) {
+	int count = 0;
+    struct memoryList *current = head;
+    while(current->next != NULL) {
+        if((current->alloc == '0') && (current->size <= size))
+            count++;
+        current = current->next;
+    }
+    return count;
 }       
 
-char mem_is_alloc(void *ptr)
-{
-        return 0;
+// Is a byte allocated?
+char mem_is_alloc(void *ptr) {
+    return NULL;
 }
 
 /* 
