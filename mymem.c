@@ -58,22 +58,25 @@ void initmem(strategies strategy, size_t sz)
 
 	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
     if(head != NULL) {
-        struct memoryList *trav;
-        trav = head;
-        while(trav->next != NULL) {
-            free(trav->prev);
-            trav = trav->next;
+        struct memoryList *current;
+        current = head;
+        while(current->next != NULL) {
+            free(current->prev);
+            current = current->next;
         }
+        free(current);
     }
 
 	myMemory = malloc(sz);
 	
 	/* TODO: Initialize memory management structure. */
-    head = malloc(sizeof(struct memoryList));
-    head->alloc = 0;
-    head->size = sz;
-    head->ptr = myMemory;
-    tail = head;
+    // Allocate the size of memoryList to head.
+    head = (struct memoryList*) malloc(sizeof(struct memoryList));
+    head->alloc = 0;        // Not allocated
+    head->size = sz;        // Size of memory block
+    head->ptr = myMemory;   // Point to the allocated memory block address
+    head->next = NULL;      // Does not link to other blocks at init
+    head->prev = NULL;
 }
 
 /* Allocate a block of memory with the requested size.
