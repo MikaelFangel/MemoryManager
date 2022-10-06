@@ -57,13 +57,23 @@ void initmem(strategies strategy, size_t sz)
 	if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
 	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
-
+    if(head != NULL) {
+        struct memoryList *trav;
+        trav = head;
+        while(trav->next != NULL) {
+            free(trav->prev);
+            trav = trav->next;
+        }
+    }
 
 	myMemory = malloc(sz);
 	
 	/* TODO: Initialize memory management structure. */
-
-
+    head = malloc(sizeof(struct memoryList));
+    head->alloc = 0;
+    head->size = sz;
+    head->ptr = myMemory;
+    tail = head;
 }
 
 /* Allocate a block of memory with the requested size.
