@@ -68,15 +68,16 @@ void initmem(strategies strategy, size_t sz)
     }
 
 	myMemory = malloc(sz);
-	
+
 	/* TODO: Initialize memory management structure. */
     // Allocate the size of memoryList to head.
     head = (struct memoryList*) malloc(sizeof(struct memoryList));
     head->alloc = 0;        // Not allocated
     head->size = sz;        // Size of memory block
     head->ptr = myMemory;   // Point to the allocated memory block address
-    head->next = NULL;      // Does not link to other blocks at init
-    head->prev = NULL;
+    // Circular linked list
+    head->next = head;
+    head->prev = head;
 }
 
 /* Allocate a block of memory with the requested size.
@@ -85,16 +86,17 @@ void initmem(strategies strategy, size_t sz)
  *  Restriction: requested >= 1 
  */
 
-void *mymalloc(size_t requested)
-{
+void *mymalloc(size_t requested) {
 	assert((int)myStrategy > 0);
+
+    void* memoryBlock;
 	
-	switch (myStrategy)
-	  {
+	switch (myStrategy) {
 	  case NotSet: 
 	            return NULL;
 	  case First:
-	            return NULL;
+          memoryBlock = firstfit(requested);
+          break;
 	  case Best:
 	            return NULL;
 	  case Worst:
@@ -123,19 +125,27 @@ void myfree(void* block)
 int mem_holes() {
     int count = 0;
     struct memoryList *current = head;
-    while(current->next != NULL) {
-        if (current->alloc == '0') {
+    do {
+        if (!current->alloc) {
             count++;
         }
         current = current->next;
-    }
+    } while(current->next != head);
 	return count;
 }
 
 /* Get the number of bytes allocated */
 // Might have misunderstood, but this is calculating allocated size and not the number of allocated blocks as guide suggests
 int mem_allocated() {
-    return mySize - mem_free();
+    int size = 0;
+    struct memoryList *current = head;
+    while(current->next != head) {
+        if(current->alloc) {
+            size += current->size;
+        }
+        current = current->next;
+    }
+    return size;
 }
 
 /* Number of non-allocated bytes */
@@ -143,11 +153,11 @@ int mem_allocated() {
 int mem_free() {
     int size = 0;
     struct memoryList *current = head;
-    while(current->next != NULL) {
-        if (current->alloc == '0')
+    do {
+        if (!current->alloc)
             size += current->size;
         current = current->next;
-    }
+    } while(current->next != head);
 	return size;
 }
 
@@ -156,11 +166,11 @@ int mem_free() {
 int mem_largest_free() {
     int max = 0;
     struct memoryList *current = head;
-    while(current->next != NULL) {
-        if((current->alloc == '0') && (current->size > max))
+    do {
+        if(!(current->alloc) && (current->size > max))
             max = current->size;
         current = current->next;
-    }
+    } while(current->next != head);
 	return max;
 }
 
@@ -169,7 +179,7 @@ int mem_largest_free() {
 int mem_small_free(int size) {
 	int count = 0;
     struct memoryList *current = head;
-    while(current->next != NULL) {
+    while(current->next != head) {
         if((current->alloc == '0') && (current->size <= size))
             count++;
         current = current->next;
@@ -189,23 +199,19 @@ char mem_is_alloc(void *ptr) {
 
 
 //Returns a pointer to the memory pool.
-void *mem_pool()
-{
+void *mem_pool() {
 	return myMemory;
 }
 
 // Returns the total number of bytes in the memory pool. */
-int mem_total()
-{
+int mem_total() {
 	return mySize;
 }
 
 
 // Get string name for a strategy. 
-char *strategy_name(strategies strategy)
-{
-	switch (strategy)
-	{
+char *strategy_name(strategies strategy) {
+	switch (strategy) {
 		case Best:
 			return "best";
 		case Worst:
@@ -260,8 +266,7 @@ void print_memory()
  * This function does not depend on your implementation, 
  * but on the functions you wrote above.
  */ 
-void print_memory_status()
-{
+void print_memory_status() {
 	printf("%d out of %d bytes allocated.\n",mem_allocated(),mem_total());
 	printf("%d bytes are free in %d holes; maximum allocatable block is %d bytes.\n",mem_free(),mem_holes(),mem_largest_free());
 	printf("Average hole size is %f.\n\n",((float)mem_free())/mem_holes());
