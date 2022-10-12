@@ -91,14 +91,81 @@ void *mymalloc(size_t requested) {
         case Next:
             return NULL;
     }
+    // If no memory block fits requested size
+    if (memoryBlock == NULL)
+        return NULL;
+
+    return insertNode(memoryBlock, requested);
+}
+
+void *insertNode(struct memoryList *freeBlock, size_t requested) {
+    // newBlock takes up space in "front" of the freeBlock
+    // Allocate space for the new block node
+    struct memoryList *newBlock = (struct memoryList *) malloc(sizeof(struct memoryList));
+    newBlock->alloc = '1';
+    newBlock->size = (int) requested;
+    newBlock->ptr = freeBlock->ptr;
+    // Make the freeBlock smaller by the size of newBlock
+    freeBlock->size = freeBlock->size - requested;
+    freeBlock->ptr = freeBlock->ptr + requested;
+
+    // Check for head and tail. This needs additional check but works for the simplest case
+    if (head->ptr == freeBlock->ptr) {
+        head = newBlock;
+    }
+
+    if (tail->ptr == freeBlock->ptr) {
+        tail = freeBlock;
+        freeBlock->next = head;
+    }
+
+    // Insert node and adjust pointers
+    freeBlock->prev->next = newBlock;
+    newBlock->prev = freeBlock->prev;
+    newBlock->next = freeBlock;
+    freeBlock->prev = newBlock;
+
+    // Return pointer to previous allocated block
+    return newBlock->ptr;
+}
+
+struct memoryList *firstfit(size_t requested) {
+    struct memoryList *current = head;
+    do {
+        if ((current->alloc == '0') && (current->size > requested))
+            return current;
+        current = current->next;
+    } while (current != head);
     return NULL;
 }
 
 
 /* Frees a block of memory previously allocated by mymalloc. */
-void myfree(void* block)
-{
-	return;
+void myfree(void *block) {
+    // Search linked list until block is found
+    struct memoryList *current = head;
+    do {
+        if (current->ptr == block)
+            break;
+        current = current->next;
+    } while (current != head);
+
+    // Mark block free
+    current->alloc = 0;
+
+    // Add size of current block to prev and link prev block to next block
+    current->next->size += current->size;
+    current->prev->next = current->next;
+
+    if (current == head) {
+        head = current->next;
+    }
+
+    // Link next block to previous. Only if not last
+    current->next->prev = current->prev;
+    current = current->prev;
+
+    free(current);
 }
 
 /****** Memory status/property functions ******
