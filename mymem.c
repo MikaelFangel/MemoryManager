@@ -10,20 +10,7 @@
  * You may change this to fit your implementation.
  */
 
-struct memoryList
-{
-  // doubly-linked list
-  struct memoryList *prev;
-  struct memoryList *next;
-
-  int size;            // How many bytes in this block?
-  char alloc;          // 1 if this block is allocated,
-                       // 0 if this block is free.
-  void *ptr;           // location of block in memory pool.
-};
-
 strategies myStrategy = NotSet;    // Current strategy
-
 
 size_t mySize;
 void *myMemory = NULL;
@@ -60,10 +47,10 @@ void initmem(strategies strategy, size_t sz)
     if(head != NULL) {
         struct memoryList *current;
         current = head;
-        while(current->next != NULL) {
+        do {
             free(current->prev);
             current = current->next;
-        }
+        } while(current != head);
         free(current);
     }
 
@@ -72,12 +59,13 @@ void initmem(strategies strategy, size_t sz)
 	/* TODO: Initialize memory management structure. */
     // Allocate the size of memoryList to head.
     head = (struct memoryList*) malloc(sizeof(struct memoryList));
-    head->alloc = 0;        // Not allocated
+    head->alloc = '0';       // Not allocated
     head->size = sz;        // Size of memory block
     head->ptr = myMemory;   // Point to the allocated memory block address
     // Circular linked list
     head->next = head;
     head->prev = head;
+    tail = head;
 }
 
 /* Allocate a block of memory with the requested size.
@@ -89,7 +77,7 @@ void initmem(strategies strategy, size_t sz)
 void *mymalloc(size_t requested) {
 	assert((int)myStrategy > 0);
 
-    void* memoryBlock;
+    struct memoryList* memoryBlock;
 	
 	switch (myStrategy) {
 	  case NotSet: 
@@ -126,11 +114,11 @@ int mem_holes() {
     int count = 0;
     struct memoryList *current = head;
     do {
-        if (!current->alloc) {
+        if (current->alloc == '0') {
             count++;
         }
         current = current->next;
-    } while(current->next != head);
+    } while(current != head);
 	return count;
 }
 
@@ -139,26 +127,27 @@ int mem_holes() {
 int mem_allocated() {
     int size = 0;
     struct memoryList *current = head;
-    while(current->next != head) {
-        if(current->alloc) {
+    do {
+        if(current->alloc == '1') {
             size += current->size;
         }
         current = current->next;
-    }
+    } while(current != head);
     return size;
 }
 
 /* Number of non-allocated bytes */
 // Iterate list and count non-allocated size
 int mem_free() {
-    int size = 0;
+    /*int size = 0;
     struct memoryList *current = head;
     do {
-        if (!current->alloc)
+        if (current->alloc == '0')
             size += current->size;
         current = current->next;
     } while(current->next != head);
-	return size;
+	return size;*/
+    return mem_total() - mem_allocated();
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
@@ -167,10 +156,10 @@ int mem_largest_free() {
     int max = 0;
     struct memoryList *current = head;
     do {
-        if(!(current->alloc) && (current->size > max))
+        if((current->alloc == '0') && (current->size > max))
             max = current->size;
         current = current->next;
-    } while(current->next != head);
+    } while(current != head);
 	return max;
 }
 

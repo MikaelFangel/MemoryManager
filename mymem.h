@@ -1,13 +1,23 @@
 #include <stddef.h>
 
-typedef enum strategies_enum
-{
+typedef enum strategies_enum {
 	NotSet = 0,
 	Best = 1,
 	Worst = 2,
 	First = 3,
 	Next = 4
 } strategies;
+
+struct memoryList {
+    // doubly-linked list
+    struct memoryList *prev;
+    struct memoryList *next;
+
+    int size;            // How many bytes in this block?
+    char alloc;          // 1 if this block is allocated,
+    // 0 if this block is free.
+    void *ptr;           // location of block in memory pool.
+};
 
 char *strategy_name(strategies strategy);
 strategies strategyFromString(char * strategy);
@@ -16,9 +26,9 @@ strategies strategyFromString(char * strategy);
 void initmem(strategies strategy, size_t sz);
 void *mymalloc(size_t requested);
 
-void insertNode(void *memoryBlock);
+void* insertNode(struct memoryList *freeBlock, size_t size);
 
-void* firstfit(size_t requested);
+struct memoryList *firstfit(size_t requested);
 void myfree(void* block);
 
 int mem_holes(  );
