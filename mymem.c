@@ -150,22 +150,51 @@ void myfree(void *block) {
         current = current->next;
     } while (current != head);
 
-    // Mark block free
-    current->alloc = 0;
+    // Free block
+    current->alloc = '0';
 
-    // Add size of current block to prev and link prev block to next block
-    current->next->size += current->size;
-    current->prev->next = current->next;
+    //TODO: Maybe these check could be done repetitively recursive or iterative.
 
-    if (current == head) {
-        head = current->next;
+    // Check if previous is unallocated, merge with current
+    if(current->prev->alloc == '0') {
+        // Link previous to next and vice versa
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+        // Merge the size of previous block with current
+        current->prev->size += current->size;
+
+        // if current is head, make next block head and free current
+        if(current == head) {
+            head = current->next;
+            free(current);
+            current = head;
+        } else {
+            // Make previous block current and free the next now empty block
+            current = current->prev;
+            free(current->next);
+        }
     }
 
-    // Link next block to previous. Only if not last
-    current->next->prev = current->prev;
-    current = current->prev;
+    // Check if next is unallocated, merge with current
+    if(current->next->alloc == '0') {
+        // We need next stored temporarily to be able to free it later
+        struct memoryList *next = current->next;
 
-    free(current);
+        // Merge the size of current with the next block
+        current->size += next->size;
+
+        // Link next next to current and vice versa
+        next->next->prev = current;
+        current->next = next->next;
+
+        // If current->next is head, make current head and free next
+        if(current->next == head) {
+            head = current;
+            free(next);
+        } else {
+            free(next);
+        }
+    }
 }
 
 /****** Memory status/property functions ******
