@@ -203,16 +203,7 @@ int mem_allocated() {
 }
 
 /* Number of non-allocated bytes */
-// Iterate list and count non-allocated size
 int mem_free() {
-    /*int size = 0;
-    struct memoryList *current = head;
-    do {
-        if (current->alloc == '0')
-            size += current->size;
-        current = current->next;
-    } while(current->next != head);
-	return size;*/
     return mem_total() - mem_allocated();
 }
 
@@ -342,7 +333,7 @@ void try_mymem(int argc, char **argv) {
     a = mymalloc(100);
     b = mymalloc(100);
     c = mymalloc(100);
-    myfree(a);
+    myfree(b);
     d = mymalloc(50);
     myfree(a);
     e = mymalloc(25);
