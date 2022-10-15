@@ -303,7 +303,11 @@ strategies strategyFromString(char *strategy) {
 
 /* Use this function to print out the current contents of memory. */
 void print_memory() {
-    return;
+    struct memoryList *current = head;
+    do {
+        printf("Allocated: %c \t Size: %d\n", current->alloc, current->size);
+        current = current->next;
+    } while (current != head);
 }
 
 /* Use this function to track memory allocation performance.  
