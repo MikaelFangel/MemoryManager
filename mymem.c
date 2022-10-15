@@ -264,7 +264,12 @@ int mem_small_free(int size) {
 
 // Is a byte allocated?
 char mem_is_alloc(void *ptr) {
-    return NULL;
+    struct memoryList *current = head;
+    do {
+        if(current->ptr == ptr)
+            break;
+        current = current->next;
+    } while (current != head);
 }
 
 /* 
