@@ -59,8 +59,8 @@ void initmem(strategies strategy, size_t sz) {
     // Allocate the size of memoryList to head.
     head = (struct memoryList *) malloc(sizeof(struct memoryList));
     head->alloc = '0';       // Not allocated
-    head->size = sz;        // Size of memory block
-    head->ptr = myMemory;   // Point to the allocated memory block address
+    head->size = (int)sz;    // Size of memory block
+    head->ptr = myMemory;    // Point to the allocated memory block address
     // Circular linked list
     head->next = head;
     head->prev = head;
@@ -138,16 +138,20 @@ void *insertNode(struct memoryList *block, size_t requested) {
     return blockToInsert->ptr;
 }
 
+/**
+ * Search the linked list until an unallocated block is found that is larger than or equal to the requsted size
+ * @param requested size
+ * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
+ */
 struct memoryList *firstfit(size_t requested) {
     struct memoryList *current = head;
     do {
-        if ((current->alloc == '0') && (current->size > requested))
+        if ((current->alloc == '0') && (current->size >= requested))
             return current;
         current = current->next;
     } while (current != head);
     return NULL;
 }
-
 
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void *block) {
@@ -339,7 +343,7 @@ strategies strategyFromString(char *strategy) {
 void print_memory() {
     struct memoryList *current = head;
     do {
-        printf("Allocated: %c \t Size: %d\n", current->alloc, current->size);
+        printf("Allocated: %c\tSize: %d\tPtr: %p\n", current->alloc, current->size, current->ptr);
         current = current->next;
     } while (current != head);
 }
