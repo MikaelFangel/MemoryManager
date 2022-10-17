@@ -134,6 +134,10 @@ void *insertNode(struct memoryList *block, size_t requested) {
     blockToInsert->next = block;
     block->prev = blockToInsert;
 
+    if(block->size == 0) {
+        myfree(block->ptr);
+    }
+
     // Return pointer to allocated block
     return blockToInsert->ptr;
 }
@@ -153,7 +157,10 @@ struct memoryList *firstfit(size_t requested) {
     return NULL;
 }
 
-/* Frees a block of memory previously allocated by mymalloc. */
+/**
+ * Frees a block of memory previously allocated by mymalloc
+ * @param block pointer to the block to be freed
+ */
 void myfree(void *block) {
     // Search linked list until block is found
     struct memoryList *current = head;
@@ -163,13 +170,13 @@ void myfree(void *block) {
         current = current->next;
     } while (current != head);
 
-    // Free block
+    // Mark block unallocated
     current->alloc = '0';
 
     //TODO: Maybe these check could be done repetitively recursive or iterative.
 
     // Check if previous is unallocated, merge with current
-    if(current->prev->alloc == '0') {
+    if(current->prev->alloc == '0' && current != head) {
         // Link previous to next and vice versa
         current->prev->next = current->next;
         current->next->prev = current->prev;
@@ -189,7 +196,7 @@ void myfree(void *block) {
     }
 
     // Check if next is unallocated, merge with current
-    if(current->next->alloc == '0') {
+    if(current->next->alloc == '0' && current->alloc == '0' && current != tail) {
         // We need next stored temporarily to be able to free it later
         struct memoryList *next = current->next;
 
@@ -207,6 +214,21 @@ void myfree(void *block) {
         } else {
             free(next);
         }
+    }
+
+    // Free if block is empty
+    if(current->size == 0) {
+        // Link prev and next block
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+        // Check for head and tail
+        if(current == head) {
+            head = current->next;
+        }
+        if(current == tail) {
+            tail = current->prev;
+        }
+        free(current);
     }
 }
 
@@ -375,15 +397,12 @@ void try_mymem(int argc, char **argv) {
     /* A simple example.
        Each algorithm should produce a different layout. */
 
-    initmem(strat, 500);
+    initmem(strat, 6);
 
-    a = mymalloc(100);
-    b = mymalloc(100);
-    c = mymalloc(100);
+    a = mymalloc(2);
+    b = mymalloc(2);
+    c = mymalloc(2);
     myfree(b);
-    d = mymalloc(50);
-    myfree(a);
-    e = mymalloc(25);
 
     print_memory();
     print_memory_status();
