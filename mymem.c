@@ -89,7 +89,7 @@ void *mymalloc(size_t requested) {
         case Worst:
             return NULL;
         case Next:
-            return NULL;
+            memoryBlock = nextfit(requested);
     }
     // If no memory block fits requested size
     if (memoryBlock == NULL)
@@ -143,7 +143,7 @@ void *insertNode(struct memoryList *block, size_t requested) {
 }
 
 /**
- * Search the linked list until an unallocated block is found that is larger than or equal to the requsted size
+ * Search the linked list from head until an unallocated block is found that is larger than or equal to the requsted size
  * @param requested size
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
@@ -155,6 +155,21 @@ struct memoryList *firstfit(size_t requested) {
         current = current->next;
     } while (current != head);
     return NULL;
+}
+
+/**
+ * TODO: Find a better solution than to search from tail - only works in the beginning. How to keep track of last allocated block?
+ * Search the linked list from tail until an unallocated block is found that is larger than or equal to the requsted size
+ * @param requested size
+ * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
+ */
+struct memoryList *nextfit(size_t requested) {
+    struct memoryList *current = tail;
+    do {
+        if ((current->alloc == '0') && (current->size >= requested))
+            return current;
+        current = current->next;
+    } while (current != tail);
 }
 
 /**

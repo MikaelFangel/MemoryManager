@@ -29,6 +29,7 @@ void *mymalloc(size_t requested);
 void* insertNode(struct memoryList *block, size_t size);
 
 struct memoryList *firstfit(size_t requested);
+struct memoryList *nextfit(size_t requested);
 void myfree(void* block);
 
 int mem_holes(  );
