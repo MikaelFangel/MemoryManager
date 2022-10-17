@@ -26,7 +26,7 @@ strategies strategyFromString(char * strategy);
 void initmem(strategies strategy, size_t sz);
 void *mymalloc(size_t requested);
 
-void* insertNode(struct memoryList *freeBlock, size_t size);
+void* insertNode(struct memoryList *block, size_t size);
 
 struct memoryList *firstfit(size_t requested);
 void myfree(void* block);

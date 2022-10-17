@@ -98,35 +98,44 @@ void *mymalloc(size_t requested) {
     return insertNode(memoryBlock, requested);
 }
 
-void *insertNode(struct memoryList *freeBlock, size_t requested) {
-    // newBlock takes up space in "front" of the freeBlock
+/**
+ * Insert a node memory block in the linked list
+ * @param block the block of free memory to insert new block in
+ * @param requested the requested size of the new block
+ * @return pointer to the newly inserted block
+ */
+void *insertNode(struct memoryList *block, size_t requested) {
+    // blockToInsert takes up space in "front" of the block.
     // Allocate space for the new block node
-    struct memoryList *newBlock = (struct memoryList *) malloc(sizeof(struct memoryList));
-    newBlock->alloc = '1';
-    newBlock->size = (int) requested;
-    newBlock->ptr = freeBlock->ptr;
-    // Make the freeBlock smaller by the size of newBlock
-    freeBlock->size = freeBlock->size - requested;
-    freeBlock->ptr = freeBlock->ptr + requested;
+    struct memoryList *blockToInsert = (struct memoryList *) malloc(sizeof(struct memoryList));
+    blockToInsert->alloc = '1';
+    blockToInsert->size = (int) requested;
+    blockToInsert->ptr = block->ptr;
 
-    // Check for head and tail. This needs additional check but works for the simplest case
-    if (head->ptr == freeBlock->ptr) {
-        head = newBlock;
+    // Make the block smaller by the size of blockToInsert and adjust pointers.
+    block->size = block->size - requested;
+    block->ptr = block->ptr + requested;
+
+    // Check if block is head and adjust head to the new node
+    if (head->ptr == block->ptr) {
+        head = blockToInsert;
     }
 
-    if (tail->ptr == freeBlock->ptr) {
-        tail = freeBlock;
-        freeBlock->next = head;
+    // Check if block is tail and adjust tail to the new node and keep the linked list circular
+    if (tail->ptr == block->ptr) {
+        tail = block;
+        // Ensure circular linked list
+        block->next = head;
     }
 
     // Insert node and adjust pointers
-    freeBlock->prev->next = newBlock;
-    newBlock->prev = freeBlock->prev;
-    newBlock->next = freeBlock;
-    freeBlock->prev = newBlock;
+    block->prev->next = blockToInsert;
+    blockToInsert->prev = block->prev;
+    blockToInsert->next = block;
+    block->prev = blockToInsert;
 
-    // Return pointer to previous allocated block
-    return newBlock->ptr;
+    // Return pointer to allocated block
+    return blockToInsert->ptr;
 }
 
 struct memoryList *firstfit(size_t requested) {
