@@ -317,9 +317,10 @@ char mem_is_alloc(void *ptr) {
     struct memoryList *current = head;
     do {
         if(current->ptr == ptr)
-            break;
+            return '1';
         current = current->next;
     } while (current != head);
+    return '0';
 }
 
 /* 
