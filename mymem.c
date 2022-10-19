@@ -44,8 +44,7 @@ void initmem(strategies strategy, size_t sz) {
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
     if (head != NULL) {
-        struct memoryList *current;
-        current = head;
+        struct memoryList *current = head;
         do {
             free(current->prev);
             current = current->next;
@@ -121,13 +120,6 @@ void *insertNode(struct memoryList *block, size_t requested) {
         head = blockToInsert;
     }
 
-    // Check if block is tail and adjust tail to the new node and keep the linked list circular
-    if (tail->ptr == block->ptr) {
-        tail = block;
-        // Ensure circular linked list
-        block->next = head;
-    }
-
     // Insert node and adjust pointers
     block->prev->next = blockToInsert;
     blockToInsert->prev = block->prev;
@@ -198,45 +190,36 @@ void myfree(void *block) {
         // Merge the size of previous block with current
         current->prev->size += current->size;
 
-        // if current is head, make next block head and free current
-        if(current == head) {
-            head = current->next;
-            free(current);
-            current = head;
-        } else {
-            // Make previous block current and free the next now empty block
-            current = current->prev;
-            free(current->next);
+        // Check if merging with head and adjust head
+        if(current->prev == head) {
+            head = current;
         }
+        free(current->prev);
     }
 
     // Check if next is unallocated, merge with current
     if(current->next->alloc == '0' && current->alloc == '0' && current != tail) {
-        // We need next stored temporarily to be able to free it later
-        struct memoryList *next = current->next;
-
-        // Merge the size of current with the next block
-        current->size += next->size;
-
         // Link next next to current and vice versa
-        next->next->prev = current;
-        current->next = next->next;
+        current->next->next->prev = current;
+        current->next = current->next->next;
+        // Merge the size of current with the next block
+        current->size += current->next->size;
 
         // If current->next is head, make current head and free next
         if(current->next == head) {
             head = current;
-            free(next);
+            free(current->next);
         } else {
-            free(next);
+            free(current->next);
         }
     }
 
-    // Free if block is empty
+    // Free if memory block is empty
     if(current->size == 0) {
         // Link prev and next block
         current->prev->next = current->next;
         current->next->prev = current->prev;
-        // Check for head and tail
+        // Check for head and tail and adjust
         if(current == head) {
             head = current->next;
         }
