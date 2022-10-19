@@ -167,7 +167,7 @@ struct memoryList *nextfit(size_t requested) {
 
 struct memoryList *bestfit(size_t requested) {
     struct memoryList *current = head;
-    struct memoryList *bestfit;
+    struct memoryList *bestfit = NULL;
     int smallestDiff = -1; // Start value
 
     // Loop 
@@ -186,7 +186,7 @@ struct memoryList *bestfit(size_t requested) {
             }
         }
         current = current->next;
-    } while (current != tail);
+    } while (current != head);
 
     // Return null if there is nothing found
     if (smallestDiff == -1) return NULL;
@@ -419,7 +419,7 @@ void try_mymem(int argc, char **argv) {
     if (argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = First;
+        strat = Best;
 
 
     /* A simple example.
@@ -434,5 +434,4 @@ void try_mymem(int argc, char **argv) {
 
     print_memory();
     print_memory_status();
-
 }
