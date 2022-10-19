@@ -17,7 +17,7 @@ void *myMemory = NULL;
 
 static struct memoryList *head;
 static struct memoryList *tail;
-static struct memoryList *last; // Used in next-fit 
+static struct memoryList *last; // Used in next-fit
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -64,6 +64,10 @@ void initmem(strategies strategy, size_t sz) {
     head->next = head;
     head->prev = head;
     tail = head;
+
+    if(strategy == Next) {
+        last = head;
+    }
 }
 
 /* Allocate a block of memory with the requested size.
@@ -129,6 +133,7 @@ void *insertNode(struct memoryList *block, size_t requested) {
     if(block->size == 0) {
         myfree(block->ptr);
     }
+    last = blockToInsert;
 
     // Return pointer to allocated block
     return blockToInsert->ptr;
@@ -156,7 +161,7 @@ struct memoryList *firstfit(size_t requested) {
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
 struct memoryList *nextfit(size_t requested) {
-    struct memoryList *current = last;
+    struct memoryList *current = last->next;
     do {
         if ((current->alloc == '0') && (current->size >= requested))
             return current;
