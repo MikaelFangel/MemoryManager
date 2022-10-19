@@ -43,13 +43,19 @@ void initmem(strategies strategy, size_t sz) {
     if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
 
     /* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
-    if (head != NULL) {
-        struct memoryList *current = head;
+    struct memoryList *current = head;
+    struct memoryList *next;
+    if(head != NULL) {
         do {
-            free(current->prev);
-            current = current->next;
-        } while (current != head);
+            next = current->next;
+            free(current);
+            current = next;
+        } while (current->next != head);
+
         free(current);
+        current = NULL;
+        next = NULL;
+        head = NULL;
     }
 
     myMemory = malloc(sz);
