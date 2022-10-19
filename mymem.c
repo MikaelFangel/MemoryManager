@@ -88,7 +88,8 @@ void *mymalloc(size_t requested) {
             memoryBlock = firstfit(requested);
             break;
         case Best:
-            return NULL;
+            memoryBlock = bestfit(requested);
+            break;
         case Worst:
             return NULL;
         case Next:
@@ -167,6 +168,34 @@ struct memoryList *nextfit(size_t requested) {
             return current;
         current = current->next;
     } while (current != last);
+}
+
+struct memoryList *bestfit(size_t requested) {
+    struct memoryList *current = head;
+    struct memoryList *bestfit = NULL;
+    int smallestDiff = -1; // Start value
+
+    // Loop 
+    do {
+        if ((current->alloc == '0') && (current->size >= requested)) {
+            int diff = current->size - requested;
+
+            // Set smallest diff
+            if (smallestDiff == -1) {
+                smallestDiff = diff;
+                bestfit = current;
+            }
+            else if (diff < smallestDiff) {
+                smallestDiff = diff;
+                bestfit = current;
+            }
+        }
+        current = current->next;
+    } while (current != head);
+
+    // Return null if there is nothing found
+    if (smallestDiff == -1) return NULL;
+    return bestfit;
 }
 
 /**
@@ -393,7 +422,7 @@ void try_mymem(int argc, char **argv) {
     if (argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = First;
+        strat = Best;
 
 
     /* A simple example.
@@ -408,5 +437,4 @@ void try_mymem(int argc, char **argv) {
 
     print_memory();
     print_memory_status();
-
 }
