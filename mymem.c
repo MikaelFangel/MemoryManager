@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <assert.h>
 #include "mymem.h"
 #include <time.h>
@@ -10,17 +11,17 @@
  * You may change this to fit your implementation.
  */
 
-struct memoryList
+typedef struct memoryList
 {
   // doubly-linked list
   struct memoryList *prev;
   struct memoryList *next;
 
-  int size;            // How many bytes in this block?
-  char alloc;          // 1 if this block is allocated,
+  size_t size;            // How many bytes in this block?
+  bool alloc;          // 1 if this block is allocated,
                        // 0 if this block is free.
   void *ptr;           // location of block in memory pool.
-};
+} memoryList;
 
 strategies myStrategy = NotSet;    // Current strategy
 
