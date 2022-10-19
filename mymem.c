@@ -125,7 +125,7 @@ int mem_holes()
     int count = 0;
     memoryList *current = head;
     while(current != NULL) {
-        if(current->alloc)
+        if(!current->alloc)
             count++;
         current = current->next;
     }
@@ -136,7 +136,15 @@ int mem_holes()
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
-	return 0;
+    int size = 0;
+    memoryList *current = head;
+    while(current != NULL) {
+        if(current->alloc)
+            size += current->size;
+        current = current->next;
+    }
+
+	return size;
 }
 
 /* Number of non-allocated bytes */
