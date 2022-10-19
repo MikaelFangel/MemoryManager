@@ -180,8 +180,6 @@ void myfree(void *block) {
     // Mark block unallocated
     current->alloc = '0';
 
-    //TODO: Maybe these check could be done repetitively recursive or iterative.
-
     // Check if previous is unallocated, merge with current
     if(current->prev->alloc == '0' && current != head) {
         // Link previous to next and vice versa
