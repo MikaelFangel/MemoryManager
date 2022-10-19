@@ -207,6 +207,8 @@ struct memoryList *nextfit(size_t requested) {
             return current;
         current = current->next;
     } while (current != last);
+
+    return NULL;
 }
 
 struct memoryList *bestfit(size_t requested) {
