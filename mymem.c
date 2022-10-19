@@ -86,7 +86,8 @@ void *mymalloc(size_t requested) {
         case Best:
             return NULL;
         case Worst:
-            return NULL;
+            memoryBlock = worstfit(requested);
+            break;
         case Next:
             memoryBlock = nextfit(requested);
     }
@@ -147,6 +148,38 @@ struct memoryList *firstfit(size_t requested) {
         current = current->next;
     } while (current != head);
     return NULL;
+}
+
+struct memoryList *worstfit(size_t requested) {
+    struct memoryList *current, *max_ptr;
+    max_ptr = head;
+
+    // Find the first unallocated struct
+    if(head->alloc == '1') {
+        do {
+            max_ptr = max_ptr->next;
+        } while(max_ptr->alloc == '1' && max_ptr != head);
+    }
+    
+    // Return NULL if we couldn't find a free space
+    if(max_ptr->alloc == '1')
+        return NULL;
+
+    current = max_ptr;
+    // Find the maximum sized free block
+    do {
+        if (current->size > max_ptr->size && current->alloc == '0') {
+            max_ptr = current;
+        }
+
+        current = current->next;
+    } while (current != head);
+
+    // Check if the requested size fit in the maximum sized block
+    if(max_ptr->size >= requested)
+        return max_ptr;
+    else
+        return NULL;
 }
 
 /**
@@ -390,18 +423,21 @@ void try_mymem(int argc, char **argv) {
     if (argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = First;
+        strat = Worst;
 
 
     /* A simple example.
        Each algorithm should produce a different layout. */
 
-    initmem(strat, 6);
+    initmem(strat, 4);
 
-    a = mymalloc(2);
-    b = mymalloc(2);
-    c = mymalloc(2);
+    a = mymalloc(1);
+    b = mymalloc(1);
+    c = mymalloc(1);
+    d = mymalloc(1);
     myfree(b);
+    myfree(d);
+    e = mymalloc(1);
 
     print_memory();
     print_memory_status();
