@@ -91,7 +91,8 @@ void *mymalloc(size_t requested) {
             memoryBlock = bestfit(requested);
             break;
         case Worst:
-            return NULL;
+            memoryBlock = worstfit(requested);
+            break;
         case Next:
             memoryBlock = nextfit(requested);
     }
@@ -155,6 +156,38 @@ struct memoryList *firstfit(size_t requested) {
     return NULL;
 }
 
+struct memoryList *worstfit(size_t requested) {
+    struct memoryList *current, *max_ptr;
+    max_ptr = head;
+
+    // Find the first unallocated struct
+    if(head->alloc == '1') {
+        do {
+            max_ptr = max_ptr->next;
+        } while(max_ptr->alloc == '1' && max_ptr != head);
+    }
+
+    // Return NULL if we couldn't find a free space
+    if(max_ptr->alloc == '1')
+        return NULL;
+
+    current = max_ptr;
+    // Find the maximum sized free block
+    do {
+        if (current->size > max_ptr->size && current->alloc == '0') {
+            max_ptr = current;
+        }
+
+        current = current->next;
+    } while (current != head);
+
+    // Check if the requested size fit in the maximum sized block
+    if(max_ptr->size >= requested)
+        return max_ptr;
+    else
+        return NULL;
+}
+
 /**
  * TODO: Find a better solution than to search from tail - only works in the beginning. How to keep track of last allocated block?
  * Search the linked list from tail until an unallocated block is found that is larger than or equal to the requsted size
@@ -175,7 +208,7 @@ struct memoryList *bestfit(size_t requested) {
     struct memoryList *bestfit = NULL;
     int smallestDiff = -1; // Start value
 
-    // Loop 
+    // Loop
     do {
         if ((current->alloc == '0') && (current->size >= requested)) {
             int diff = current->size - requested;
@@ -422,7 +455,7 @@ void try_mymem(int argc, char **argv) {
     if (argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = Best;
+        strat = First;
 
 
     /* A simple example.
@@ -437,4 +470,5 @@ void try_mymem(int argc, char **argv) {
 
     print_memory();
     print_memory_status();
+
 }
