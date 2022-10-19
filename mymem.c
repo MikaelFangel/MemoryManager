@@ -17,7 +17,7 @@ void *myMemory = NULL;
 
 static struct memoryList *head;
 static struct memoryList *tail;
-//static struct memoryList *next;   Old from Bhupjit, guess it should be tail
+static struct memoryList *last; // Used in next-fit 
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -156,12 +156,12 @@ struct memoryList *firstfit(size_t requested) {
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
 struct memoryList *nextfit(size_t requested) {
-    struct memoryList *current = tail;
+    struct memoryList *current = last;
     do {
         if ((current->alloc == '0') && (current->size >= requested))
             return current;
         current = current->next;
-    } while (current != tail);
+    } while (current != last);
 }
 
 /**
