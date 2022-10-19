@@ -84,7 +84,8 @@ void *mymalloc(size_t requested) {
             memoryBlock = firstfit(requested);
             break;
         case Best:
-            return NULL;
+            memoryBlock = bestfit(requested);
+            break;
         case Worst:
             memoryBlock = worstfit(requested);
             break;
@@ -160,7 +161,7 @@ struct memoryList *worstfit(size_t requested) {
             max_ptr = max_ptr->next;
         } while(max_ptr->alloc == '1' && max_ptr != head);
     }
-    
+
     // Return NULL if we couldn't find a free space
     if(max_ptr->alloc == '1')
         return NULL;
@@ -195,6 +196,34 @@ struct memoryList *nextfit(size_t requested) {
             return current;
         current = current->next;
     } while (current != tail);
+}
+
+struct memoryList *bestfit(size_t requested) {
+    struct memoryList *current = head;
+    struct memoryList *bestfit = NULL;
+    int smallestDiff = -1; // Start value
+
+    // Loop
+    do {
+        if ((current->alloc == '0') && (current->size >= requested)) {
+            int diff = current->size - requested;
+
+            // Set smallest diff
+            if (smallestDiff == -1) {
+                smallestDiff = diff;
+                bestfit = current;
+            }
+            else if (diff < smallestDiff) {
+                smallestDiff = diff;
+                bestfit = current;
+            }
+        }
+        current = current->next;
+    } while (current != head);
+
+    // Return null if there is nothing found
+    if (smallestDiff == -1) return NULL;
+    return bestfit;
 }
 
 /**
@@ -423,21 +452,18 @@ void try_mymem(int argc, char **argv) {
     if (argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = Worst;
+        strat = First;
 
 
     /* A simple example.
        Each algorithm should produce a different layout. */
 
-    initmem(strat, 4);
+    initmem(strat, 6);
 
-    a = mymalloc(1);
-    b = mymalloc(1);
-    c = mymalloc(1);
-    d = mymalloc(1);
+    a = mymalloc(2);
+    b = mymalloc(2);
+    c = mymalloc(2);
     myfree(b);
-    myfree(d);
-    e = mymalloc(1);
 
     print_memory();
     print_memory_status();
