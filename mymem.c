@@ -17,10 +17,10 @@ typedef struct memoryList
   struct memoryList *prev;
   struct memoryList *next;
 
-  size_t size;            // How many bytes in this block?
-  bool alloc;          // 1 if this block is allocated,
-                       // 0 if this block is free.
-  void *ptr;           // location of block in memory pool.
+  size_t size;
+  bool alloc;
+
+  void *ptr;
 } memoryList;
 
 strategies myStrategy = NotSet;    // Current strategy
@@ -29,8 +29,8 @@ strategies myStrategy = NotSet;    // Current strategy
 size_t mySize;
 void *myMemory = NULL;
 
-static struct memoryList *head;
-static struct memoryList *tail;
+static memoryList *head;
+static memoryList *tail;
 //static struct memoryList *next;   Old from Bhupjit, guess it should be tail
 
 
@@ -52,19 +52,32 @@ void initmem(strategies strategy, size_t sz)
 {
 	myStrategy = strategy;
 
+	if (myMemory != NULL) {
+        free(myMemory); /* in case this is not the first time initmem2 is called */
+        myMemory = NULL;
+    }
+    
+	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
+    memoryList *current = head;
+    memoryList *next;
+    while(current != NULL) {
+        next = current->next;
+        free(current);
+        current = next;
+    }
+
+
 	/* all implementations will need an actual block of memory to use */
 	mySize = sz;
-
-	if (myMemory != NULL) free(myMemory); /* in case this is not the first time initmem2 is called */
-
-	/* TODO: release any other memory you were using for bookkeeping when doing a re-initialization! */
-
-
 	myMemory = malloc(sz);
 	
 	/* TODO: Initialize memory management structure. */
-
-
+    head = (memoryList *) malloc(sizeof(memoryList));
+    head->alloc = false;
+    head->size = mySize;
+    head->ptr = myMemory;
+    head->next = NULL;
+    head->prev = NULL;
 }
 
 /* Allocate a block of memory with the requested size.
