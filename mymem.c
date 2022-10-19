@@ -183,7 +183,13 @@ int mem_small_free(int size)
 
 char mem_is_alloc(void *ptr)
 {
-        return 0;
+    memoryList *current = head;
+    while(current != NULL) {
+        if(current->alloc && current->ptr == ptr)
+            return '1';
+    }
+
+    return 0;
 }
 
 /* 
