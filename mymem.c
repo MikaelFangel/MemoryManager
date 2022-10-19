@@ -17,7 +17,7 @@ void *myMemory = NULL;
 
 static struct memoryList *head;
 static struct memoryList *tail;
-//static struct memoryList *next;   Old from Bhupjit, guess it should be tail
+static struct memoryList *last; // Used in next-fit
 
 
 /* initmem must be called prior to mymalloc and myfree.
@@ -70,6 +70,10 @@ void initmem(strategies strategy, size_t sz) {
     head->next = head;
     head->prev = head;
     tail = head;
+
+    if(strategy == Next) {
+        last = head;
+    }
 }
 
 /* Allocate a block of memory with the requested size.
@@ -137,6 +141,7 @@ void *insertNode(struct memoryList *block, size_t requested) {
     if(block->size == 0) {
         myfree(block->ptr);
     }
+    last = blockToInsert;
 
     // Return pointer to allocated block
     return blockToInsert->ptr;
@@ -196,12 +201,12 @@ struct memoryList *worstfit(size_t requested) {
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
 struct memoryList *nextfit(size_t requested) {
-    struct memoryList *current = tail;
+    struct memoryList *current = last->next;
     do {
         if ((current->alloc == '0') && (current->size >= requested))
             return current;
         current = current->next;
-    } while (current != tail);
+    } while (current != last);
 }
 
 struct memoryList *bestfit(size_t requested) {
@@ -247,8 +252,6 @@ void myfree(void *block) {
 
     // Mark block unallocated
     current->alloc = '0';
-
-    //TODO: Maybe these check could be done repetitively recursive or iterative.
 
     // Check if previous is unallocated, merge with current
     if(current->prev->alloc == '0' && current != head) {
