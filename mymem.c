@@ -170,7 +170,15 @@ int mem_largest_free()
 /* Number of free blocks smaller than or equal to "size" bytes. */
 int mem_small_free(int size)
 {
-	return 0;
+    int count = 0;
+    memoryList *current = head;
+    while(current != NULL) {
+        if(!current->alloc && current->size <= size)
+            count++;
+        current = current->next;
+    }
+
+	return count;
 }       
 
 char mem_is_alloc(void *ptr)
