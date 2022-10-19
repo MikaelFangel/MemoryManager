@@ -150,13 +150,21 @@ int mem_allocated()
 /* Number of non-allocated bytes */
 int mem_free()
 {
-	return 0;
+	return mem_total() - mem_allocated();
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free()
 {
-	return 0;
+    int max = 0;
+    memoryList *current = head;
+    while(current != NULL)  {
+        if(!current->alloc && current->size > max)
+            max = current->size;
+        current = current->next;
+    }
+
+	return max;
 }
 
 /* Number of free blocks smaller than or equal to "size" bytes. */
