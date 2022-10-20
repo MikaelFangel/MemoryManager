@@ -6,7 +6,6 @@
 #include "mymem.h"
 #include <time.h>
 
-
 /* The main structure for implementing memory allocation.
  * You may change this to fit your implementation.
  */
@@ -22,6 +21,9 @@ typedef struct memoryList
 
     void *ptr;
 } memoryList;
+
+void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size);
+memoryList *firstfit(size_t requested);
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -98,7 +100,7 @@ void *mymalloc(size_t requested)
         case NotSet: 
             return NULL;
         case First:
-            return NULL;
+            return allocate_block_of_memory(firstfit(requested), requested);
         case Best:
             return NULL;
         case Worst:
@@ -108,6 +110,57 @@ void *mymalloc(size_t requested)
         default:
             return NULL;
     }
+}
+
+void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size)
+{
+    assert(blockPos->size >= requested_size);
+    // Check the block recieved is a valid mem location
+    if(blockPos == NULL)
+        return NULL;
+
+    // If the position given is equal to the requested size
+    // then overtake the block and return a pointer
+    if(blockPos->size == requested_size) {
+        blockPos->alloc = true;
+        return blockPos;
+    }
+
+    // Request block is smaller than the blockpos and we therefore
+    // need to divide the memory into two
+    memoryList *split_block = (memoryList *) malloc(sizeof(memoryList));
+
+    // Update head if we takes its place with our split
+    if(blockPos == head)
+        head = split_block;
+
+    // Setting values for the left side of our split block
+    split_block->alloc = true;
+    split_block->size = requested_size;
+    split_block->ptr = blockPos->ptr;
+    split_block->next = blockPos;
+    split_block->prev = blockPos->prev;
+
+    // Setting value for the right side of our split
+    blockPos->size -= requested_size;
+    blockPos->ptr = blockPos->ptr + requested_size;
+    // Make sure to keep the linked list connected
+    if(!blockPos->prev == NULL)
+        blockPos->prev->next = split_block;
+    blockPos->prev = split_block;
+
+    return split_block->ptr;
+}
+
+memoryList *firstfit(size_t requested) {
+    memoryList *current = head;
+    while(current != NULL) {
+        if(!current->alloc && current->size >= requested)
+            break;
+        current = current->next;
+    }
+
+    return current;
 }
 
 
