@@ -254,20 +254,22 @@ void myfree(void* block)
        block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
         goto unalloc_block;
 
-    // TODO: Logic clean up
-    memoryList *tmp = block_to_unalloc;
-    if (block_to_unalloc->prev != NULL && !block_to_unalloc->prev->alloc)
-        merge_left(block_to_unalloc);
-    if (block_to_unalloc->next != NULL && !block_to_unalloc->next->alloc)
-    {
-        block_to_unalloc->alloc = false;
-        block_to_unalloc = block_to_unalloc->next;
-        merge_left(block_to_unalloc);
-        free(block_to_unalloc);
-        return;
+
+
+
+
+
+    memoryList *mergedBlock = NULL;
+    // Try to merge to the left
+    if (block_to_unalloc->prev != NULL && !block_to_unalloc->prev->alloc){
+         mergedBlock = merge_left(block_to_unalloc);
     }
 
-    free(tmp);
+    // Try to go right and merge left again
+    if (mergedBlock->next != NULL && !mergedBlock->next->alloc)
+    {
+        merge_left(mergedBlock->next);
+    }
     return;
 
 unalloc_block:
@@ -287,26 +289,32 @@ memoryList *find_block(void* block)
     return current;
 }
 
-void merge_left(memoryList *block)
+memoryList *merge_left(memoryList *block_to_unalloc)
 {
-    if (block == last_allocated)
-        last_allocated = block->prev;
+    // Update pointer to last allocated block if the old one gets merged.
+    if (block_to_unalloc == last_allocated)
+        last_allocated = block_to_unalloc->prev;
 
     // Remove reference to the current block
-    block->prev->next = block->next;
-
-    if (block->next != NULL)
-        block->next->prev = block->prev;
+    block_to_unalloc->prev->next = block_to_unalloc->next;
+    if (block_to_unalloc->next != NULL)
+        block_to_unalloc->next->prev = block_to_unalloc->prev;
 
     // Merge sizes so the left side gets the total size
-    block->prev->size += block->size;
-    block->alloc = false;
+    block_to_unalloc->prev->size += block_to_unalloc->size;
+    block_to_unalloc->alloc = false;
+
+    memoryList *mergedBlock = block_to_unalloc->prev;
+
+    free(block_to_unalloc);
+
+    return mergedBlock;
 }
 
 /****** Memory status/property functions ******
  * Implement these functions.
- * Note that when refered to "memory" here, it is meant that the 
- * memory pool this module manages via initmem/mymalloc/myfree. 
+ * Note that when refered to "memory" here, it is meant that the
+ * memory pool this module manages via initmem/mymalloc/myfree.
  */
 
 /* Get the number of contiguous areas of free space in memory. */
@@ -373,7 +381,7 @@ int mem_small_free(int size)
     }
 
     return count;
-}       
+}
 
 char mem_is_alloc(void *ptr)
 {
@@ -383,14 +391,14 @@ char mem_is_alloc(void *ptr)
         if (current->alloc && current->ptr == ptr)
             return '1';
 
-        current = current->next; 
+        current = current->next;
     }
 
     return '0';
 }
 
-/* 
- * Feel free to use these functions, but do not modify them.  
+/*
+ * Feel free to use these functions, but do not modify them.
  * The test code uses them, but you may find them useful.
  */
 
@@ -408,7 +416,7 @@ int mem_total()
 }
 
 
-// Get string name for a strategy. 
+// Get string name for a strategy.
 char *strategy_name(strategies strategy)
 {
     switch (strategy)
@@ -452,7 +460,7 @@ strategies strategyFromString(char * strategy)
 }
 
 
-/* 
+/*
  * These functions are for you to modify however you see fit.  These will not
  * be used in tests, but you may find them useful for debugging.
  */
@@ -468,10 +476,10 @@ void print_memory()
     }
 }
 
-/* Use this function to track memory allocation performance.  
- * This function does not depend on your implementation, 
+/* Use this function to track memory allocation performance.
+ * This function does not depend on your implementation,
  * but on the functions you wrote above.
- */ 
+ */
 void print_memory_status()
 {
     printf("%d out of %d bytes allocated.\n",mem_allocated(),mem_total());

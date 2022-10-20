@@ -48,7 +48,7 @@ void print_memory_status();
 void try_mymem(int argc, char **argv);
 
 void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_size);
-void merge_left(memoryList *block);
+memoryList *merge_left(memoryList *block);
 memoryList *find_block(void* block);
 memoryList *firstfit(size_t requested);
 memoryList *worstfit(size_t requested);
