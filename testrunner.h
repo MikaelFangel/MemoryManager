@@ -1,3 +1,11 @@
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <assert.h>
+#include <time.h>
+#include <unistd.h>
+
 typedef int (*test_fp) (int, char **);
 
 typedef struct

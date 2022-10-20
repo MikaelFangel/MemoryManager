@@ -1,11 +1,3 @@
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-#include <time.h>
-#include <unistd.h>
-
 #include "mymem.h"
 #include "testrunner.h"
 
