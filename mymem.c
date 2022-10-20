@@ -24,6 +24,8 @@ typedef struct memoryList
 
 void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size);
 memoryList *firstfit(size_t requested);
+memoryList *find_block(void* block);
+void merge_left(memoryList *block);
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -123,7 +125,7 @@ void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size)
     // then overtake the block and return a pointer
     if(blockPos->size == requested_size) {
         blockPos->alloc = true;
-        return blockPos;
+        return blockPos->ptr;
     }
 
     // Request block is smaller than the blockpos and we therefore
@@ -145,7 +147,7 @@ void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size)
     blockPos->size -= requested_size;
     blockPos->ptr = blockPos->ptr + requested_size;
     // Make sure to keep the linked list connected
-    if(!blockPos->prev == NULL)
+    if(blockPos->prev != NULL)
         blockPos->prev->next = split_block;
     blockPos->prev = split_block;
 
@@ -167,7 +169,69 @@ memoryList *firstfit(size_t requested) {
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
+    memoryList *list_block = find_block(block);
+    if(list_block == NULL)
+        return;
+
+    // Freeing the only block in the memory list
+    if(list_block->next == NULL && list_block->prev == NULL)
+        goto unalloc_block;
+
+    // If we are at head the next point needs to not be null
+    // to avoid looking at restricted memory
+    if(list_block == head && list_block->next != NULL && list_block->next->alloc)
+        goto unalloc_block;
+
+    // Same for tail
+    if(list_block->next == NULL && list_block->prev != NULL && list_block->prev->alloc)
+        goto unalloc_block;
+
+    // In the middle 
+    if(list_block->next != NULL && list_block->prev != NULL && 
+        list_block->next->alloc && list_block->prev->alloc)
+        goto unalloc_block;
+
+    memoryList *tmp = list_block;
+    if(list_block->prev != NULL && !list_block->prev->alloc)
+        merge_left(list_block);
+    if(list_block->next != NULL && !list_block->next->alloc) {
+        list_block->alloc = false;
+        list_block = list_block->next;
+        printf("OUR FAKE RIGHT MERGE\n");
+        merge_left(list_block);
+        free(list_block); 
+    }
+
+    free(tmp);
     return;
+
+unalloc_block:
+    list_block->alloc = false;
+}
+
+memoryList *find_block(void* block)
+{
+    memoryList *current = head;
+    while(current != NULL) {
+        if(current->ptr == block)
+            break;
+        current = current->next;
+    }
+
+    return current;
+}
+
+void merge_left(memoryList *block)
+{
+    // Remove reference to the current block
+    block->prev->next = block->next;
+
+    if(block->next != NULL)
+        block->next->prev = block->prev;
+
+    // Merge sizes so the left side gets the total size
+    block->prev->size += block->size;
+    block->alloc = false;
 }
 
 /****** Memory status/property functions ******
@@ -244,9 +308,11 @@ char mem_is_alloc(void *ptr)
     while(current != NULL) {
         if(current->alloc && current->ptr == ptr)
             return '1';
+
+        current = current->next; 
     }
 
-    return 0;
+    return '0';
 }
 
 /* 
@@ -350,19 +416,18 @@ void try_mymem(int argc, char **argv) {
     else
         strat = First;
 
+    initmem(strat, 3);
 
     /* A simple example.  
        Each algorithm should produce a different layout. */
 
-    initmem(strat,500);
+    a = mymalloc(1);
+    b = mymalloc(1);
+    c = mymalloc(1);
 
-    a = mymalloc(100);
-    b = mymalloc(100);
-    c = mymalloc(100);
     myfree(b);
-    d = mymalloc(50);
+    myfree(c);
     myfree(a);
-    e = mymalloc(25);
 
     print_memory();
     print_memory_status();
