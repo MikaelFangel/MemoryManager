@@ -1,5 +1,6 @@
 #include "mymem.h"
 
+
 strategies myStrategy = NotSet;    // Current strategy
 
 size_t mySize;
@@ -255,19 +256,14 @@ void myfree(void* block)
         goto unalloc_block;
 
 
-
-
-
-
-    memoryList *mergedBlock = NULL;
+    memoryList *mergedBlock = block_to_unalloc;
     // Try to merge to the left
     if (block_to_unalloc->prev != NULL && !block_to_unalloc->prev->alloc){
          mergedBlock = merge_left(block_to_unalloc);
     }
 
     // Try to go right and merge left again
-    if (mergedBlock->next != NULL && !mergedBlock->next->alloc)
-    {
+    if (mergedBlock->next != NULL && !mergedBlock->next->alloc){
         merge_left(mergedBlock->next);
     }
     return;
@@ -302,7 +298,7 @@ memoryList *merge_left(memoryList *block_to_unalloc)
 
     // Merge sizes so the left side gets the total size
     block_to_unalloc->prev->size += block_to_unalloc->size;
-    block_to_unalloc->alloc = false;
+    block_to_unalloc->prev->alloc = false;
 
     memoryList *mergedBlock = block_to_unalloc->prev;
 
@@ -499,18 +495,14 @@ void try_mymem(int argc, char **argv) {
     else
         strat = Next;
 
-    initmem(strat,100);
+    initmem(strat, 100);
 
-    a = mymalloc(10);
-	b = mymalloc(1);
-	myfree(a);
-	c = mymalloc(1);
+    a=mymalloc(10);
+    b=mymalloc(10);
+    c=mymalloc(10);
+    d=mymalloc(10);
+    e=mymalloc(10);
 
-
-    printf("b + 1: %p\n", b+1);
-    printf("c: %p\n", c);
-
-    print_memory();
-    print_memory_status();
-
+    myfree(e);
+    int tmp = (mem_free() / mem_holes());
 }
