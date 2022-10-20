@@ -27,6 +27,7 @@ memoryList *firstfit(size_t requested);
 memoryList *find_block(void* block);
 void merge_left(memoryList *block);
 memoryList *worstfit(size_t requested);
+memoryList *bestfit(size_t requested);
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -105,7 +106,7 @@ void *mymalloc(size_t requested)
         case First:
             return allocate_block_of_memory(firstfit(requested), requested);
         case Best:
-            return NULL;
+            return allocate_block_of_memory(bestfit(requested), requested);
         case Worst:
             return allocate_block_of_memory(worstfit(requested), requested);
         case Next:
@@ -195,6 +196,34 @@ memoryList *worstfit(size_t requested)
         return NULL;
 }
 
+memoryList *bestfit(size_t requested)
+{
+    memoryList *current = head;
+    memoryList *bestfit = NULL;
+    int smallestDiff = -1; // Start value
+
+    while (current != NULL)
+    {
+        if(!current->alloc && current->size >= requested)
+        {
+            int diff = current->size - requested;
+
+            // Set smallest diff
+            if (smallestDiff == -1 || diff < smallestDiff)
+            {
+                smallestDiff = diff;
+                bestfit = current;
+            }
+        }
+        current = current->next;
+    }
+
+    // Return null if there is nothing found
+    if (smallestDiff == -1)
+        return NULL;
+
+    return bestfit;
+}
 
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
