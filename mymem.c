@@ -28,6 +28,7 @@ memoryList *find_block(void* block);
 void merge_left(memoryList *block);
 memoryList *worstfit(size_t requested);
 memoryList *bestfit(size_t requested);
+memoryList *nextfit(size_t requested);
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -36,9 +37,7 @@ size_t mySize;
 void *myMemory = NULL;
 
 static memoryList *head;
-static memoryList *tail;
-//static struct memoryList *next;   Old from Bhupjit, guess it should be tail
-
+static memoryList *last_allocated;
 
 /* initmem must be called prior to mymalloc and myfree.
 
@@ -84,6 +83,7 @@ void initmem(strategies strategy, size_t sz)
     head->ptr = myMemory;
     head->next = NULL;
     head->prev = NULL;
+    last_allocated = head;
 }
 
 /* Allocate a block of memory with the requested size.
@@ -110,7 +110,7 @@ void *mymalloc(size_t requested)
         case Worst:
             return allocate_block_of_memory(worstfit(requested), requested);
         case Next:
-            return NULL;
+            return allocate_block_of_memory(nextfit(requested), requested);
         default:
             return NULL;
     }
@@ -137,6 +137,8 @@ void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size)
     // Update head if we takes its place with our split
     if(blockPos == head)
         head = split_block;
+    // If we're splitting then we should also move our last pointer
+    last_allocated = split_block;
 
     // Setting values for the left side of our split block
     split_block->alloc = true;
@@ -156,6 +158,11 @@ void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size)
     return split_block->ptr;
 }
 
+/**
+ * Search the linked list from head until an unallocated block is found that is larger than or equal to the requsted size
+ * @param requested size
+ * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
+ */
 memoryList *firstfit(size_t requested) {
     memoryList *current = head;
     while(current != NULL) {
@@ -225,6 +232,29 @@ memoryList *bestfit(size_t requested)
     return bestfit;
 }
 
+memoryList *nextfit(size_t requested)
+{
+    memoryList *current = last_allocated;
+    if (current->next == NULL)
+        current = head;
+    else
+        current = last_allocated->next;
+
+    do {
+        if(!current->alloc && current->size >= requested) {
+            last_allocated = current;
+            return current;
+        }
+        if (current->next == NULL)
+            current = head;
+        else
+            current = current->next;
+    }
+    while(current != last_allocated->next);
+
+    return NULL;
+}
+
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
@@ -283,6 +313,9 @@ memoryList *find_block(void* block)
 
 void merge_left(memoryList *block)
 {
+    if(block == last_allocated)
+        last_allocated = block->prev;
+
     // Remove reference to the current block
     block->prev->next = block->next;
 
@@ -474,20 +507,49 @@ void try_mymem(int argc, char **argv) {
     if(argc > 1)
         strat = strategyFromString(argv[1]);
     else
-        strat = First;
+        strat = Next;
 
-    initmem(strat, 3);
+
 
     /* A simple example.  
        Each algorithm should produce a different layout. */
+    /*
+    int i;
+    initmem(strat,100);
+    for (i = 0; i < 100; i++)
+    {
+        void* pointer = mymalloc(1);
+    }
 
-    a = mymalloc(1);
-    b = mymalloc(1);
-    c = mymalloc(1);
+    for (i = 1; i < 100; i+= 2)
+    {
+        myfree(mem_pool() + i);
+    }
 
-    myfree(b);
-    myfree(c);
-    myfree(a);
+    void* lastPointer = NULL;
+    for (i = 1; i < 100; i+=2)
+    {
+        void* pointer = mymalloc(1);
+        if ( i > 1 && pointer != (lastPointer+2) )
+        {
+            printf("Second allocation with %s was not sequential at %i; expected %p, actual %p\n", strategy_name(strat), i,lastPointer+1,pointer);
+
+            return;
+        }
+        lastPointer = pointer;
+    }
+     */
+
+    initmem(strat,100);
+
+    a = mymalloc(10);
+	b = mymalloc(1);
+	myfree(a);
+	c = mymalloc(1);
+
+
+    printf("b + 1: %p\n", b+1);
+    printf("c: %p\n", c);
 
     print_memory();
     print_memory_status();
