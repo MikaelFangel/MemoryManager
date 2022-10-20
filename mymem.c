@@ -197,9 +197,9 @@ void myfree(void* block)
     if(list_block->next != NULL && !list_block->next->alloc) {
         list_block->alloc = false;
         list_block = list_block->next;
-        printf("OUR FAKE RIGHT MERGE\n");
         merge_left(list_block);
-        free(list_block); 
+        free(list_block);
+        return;
     }
 
     free(tmp);
