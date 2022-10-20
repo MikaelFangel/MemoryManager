@@ -24,14 +24,14 @@ static memoryList *last_allocated;
 
 void initmem(strategies strategy, size_t sz)
 {
-    // Setup variables and free if they have been used before.
     myStrategy = strategy;
-    if (myMemory != NULL){
-        free(myMemory);
+
+    if (myMemory != NULL)
+    {
+        free(myMemory); /* in case this is not the first time initmem2 is called */
         myMemory = NULL;
     }
 
-    // Free all blocks if the structure is already instantiated
     memoryList *current = head;
     memoryList *next;
     while (current != NULL)
@@ -41,11 +41,11 @@ void initmem(strategies strategy, size_t sz)
         current = next;
     }
 
-    // Setup memory block
+
+    /* all implementations will need an actual block of memory to use */
     mySize = sz;
     myMemory = malloc(sz);
 
-    // Setup linked list memory structure
     head = (memoryList *) malloc(sizeof(memoryList));
     head->alloc = false;
     head->size = mySize;
@@ -60,9 +60,10 @@ void initmem(strategies strategy, size_t sz)
  *  Otherwise, it returns a pointer to the newly allocated block.
  *  Restriction: requested >= 1 
  */
+
 void *mymalloc(size_t requested)
 {
-    assert((int) myStrategy > 0);
+    assert((int)myStrategy > 0);
     // Check if there is a block large enough to hold the requested
     if (requested > mem_largest_free())
         return NULL;
@@ -185,6 +186,7 @@ memoryList *find_block(void* block)
             break;
         current = current->next;
     }
+
     return current;
 }
 
@@ -194,7 +196,6 @@ void merge_left(memoryList *block)
     memoryList *nextBlock = block->next;
     memoryList *prevBlock = block->prev;
 
-    // Ensure to move pointer for last allocated block, when merging
     if (block == last_allocated)
         last_allocated = prevBlock;
 
@@ -277,6 +278,7 @@ int mem_small_free(int size)
             count++;
         current = current->next;
     }
+
     return count;
 }       
 
@@ -290,6 +292,7 @@ char mem_is_alloc(void *ptr)
 
         current = current->next; 
     }
+
     return '0';
 }
 
