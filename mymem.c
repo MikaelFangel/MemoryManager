@@ -128,140 +128,43 @@ void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_s
     return split_block->ptr;
 }
 
-/**
- * Search the linked list from head until an unallocated block is found that is larger than or equal to the requsted size
- * @param requested size
- * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
- */
-memoryList *firstfit(size_t requested) {
-    memoryList *current = head;
-    while (current != NULL)
-    {
-        if (!current->alloc && current->size >= requested)
-            break;
-        current = current->next;
-    }
-
-    return current;
-}
-
-memoryList *worstfit(size_t requested)
-{
-    memoryList *current, *max_ptr;
-    max_ptr = head;
-
-    // Find the first unallocated struct
-    while (max_ptr != NULL && max_ptr->alloc)
-        max_ptr = max_ptr->next;
-
-    // Return NULL if we couldn't find a free space
-    if (max_ptr == NULL)
-        return max_ptr;
-
-    current = max_ptr;
-
-    // Find the maximum sized free block
-    while (current != NULL)
-    {
-        if (current->size > max_ptr->size && !current->alloc)
-            max_ptr = current;
-        current = current->next;
-    }
-
-    // Check if the requested size fit in the maximum sized block
-    if (max_ptr->size >= requested)
-        return  max_ptr;
-    else
-        return NULL;
-}
-
-memoryList *bestfit(size_t requested)
-{
-    memoryList *current = head;
-    memoryList *bestfit = NULL;
-    int smallest_diff = -1; // Start value
-
-    while (current != NULL)
-    {
-        if (!current->alloc && current->size >= requested)
-        {
-            int diff = current->size - requested;
-
-            // Set smallest diff
-            if (smallest_diff == -1 || diff < smallest_diff)
-            {
-                smallest_diff = diff;
-                bestfit = current;
-            }
-        }
-        current = current->next;
-    }
-
-    // Return null if there is nothing found
-    if (smallest_diff == -1)
-        return NULL;
-
-    return bestfit;
-}
-
-memoryList *nextfit(size_t requested)
-{
-    memoryList *current = last_allocated;
-    if (current->next == NULL)
-        current = head;
-    else
-        current = last_allocated->next;
-
-    do
-    {
-        if (!current->alloc && current->size >= requested)
-        {
-            last_allocated = current;
-            return current;
-        }
-        if (current->next == NULL)
-            current = head;
-        else
-            current = current->next;
-    }
-    while (current != last_allocated->next);
-
-    return NULL;
-}
-
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
 {
+    // Setup shorthands
     memoryList *block_to_unalloc = find_block(block);
+    memoryList *nextBlock = block_to_unalloc->next;
+    memoryList *prevBlock = block_to_unalloc->next;
+
     if (block_to_unalloc == NULL)
         return;
 
     // Freeing the only block in the memory list
-    if (block_to_unalloc->next == NULL && block_to_unalloc->prev == NULL)
+    if (nextBlock == NULL && prevBlock == NULL)
         goto unalloc_block;
 
     // If we are at head the next point needs to not be null
     // to avoid looking at restricted memory
-    if (block_to_unalloc == head && block_to_unalloc->next != NULL && block_to_unalloc->next->alloc)
+    if (block_to_unalloc == head && nextBlock != NULL && nextBlock->alloc)
         goto unalloc_block;
 
     // Same for tail
-    if (block_to_unalloc->next == NULL && block_to_unalloc->prev != NULL && block_to_unalloc->prev->alloc)
+    if (nextBlock == NULL && prevBlock != NULL && prevBlock->alloc)
         goto unalloc_block;
 
     // In the middle 
-    if (block_to_unalloc->next != NULL && block_to_unalloc->prev != NULL &&
-       block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
+    if (nextBlock != NULL && prevBlock != NULL &&
+       nextBlock->alloc && prevBlock->alloc)
         goto unalloc_block;
 
     // TODO: Logic clean up
     memoryList *tmp = block_to_unalloc;
-    if (block_to_unalloc->prev != NULL && !block_to_unalloc->prev->alloc)
+    if (prevBlock != NULL && !prevBlock->alloc)
         merge_left(block_to_unalloc);
-    if (block_to_unalloc->next != NULL && !block_to_unalloc->next->alloc)
+    if (nextBlock != NULL && !nextBlock->alloc)
     {
         block_to_unalloc->alloc = false;
-        block_to_unalloc = block_to_unalloc->next;
+        block_to_unalloc = nextBlock;
         merge_left(block_to_unalloc);
         free(block_to_unalloc);
         return;
@@ -289,17 +192,21 @@ memoryList *find_block(void* block)
 
 void merge_left(memoryList *block)
 {
+    // Setup shorthands
+    memoryList *nextBlock = block->next;
+    memoryList *prevBlock = block->prev;
+
     if (block == last_allocated)
-        last_allocated = block->prev;
+        last_allocated = prevBlock;
 
     // Remove reference to the current block
-    block->prev->next = block->next;
+    prevBlock->next = nextBlock;
 
-    if (block->next != NULL)
-        block->next->prev = block->prev;
+    if (nextBlock != NULL)
+        nextBlock->prev = prevBlock;
 
     // Merge sizes so the left side gets the total size
-    block->prev->size += block->size;
+    prevBlock->size += block->size;
     block->alloc = false;
 }
 
@@ -449,6 +356,107 @@ strategies strategyFromString(char * strategy)
     {
         return 0;
     }
+}
+
+/**
+ * Search the linked list from head until an unallocated block is found that is larger than or equal to the requsted size
+ * @param requested size
+ * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
+ */
+memoryList *firstfit(size_t requested) {
+    memoryList *current = head;
+    while (current != NULL)
+    {
+        if (!current->alloc && current->size >= requested)
+            break;
+        current = current->next;
+    }
+
+    return current;
+}
+
+memoryList *worstfit(size_t requested)
+{
+    memoryList *current, *max_ptr;
+    max_ptr = head;
+
+    // Find the first unallocated struct
+    while (max_ptr != NULL && max_ptr->alloc)
+        max_ptr = max_ptr->next;
+
+    // Return NULL if we couldn't find a free space
+    if (max_ptr == NULL)
+        return max_ptr;
+
+    current = max_ptr;
+
+    // Find the maximum sized free block
+    while (current != NULL)
+    {
+        if (current->size > max_ptr->size && !current->alloc)
+            max_ptr = current;
+        current = current->next;
+    }
+
+    // Check if the requested size fit in the maximum sized block
+    if (max_ptr->size >= requested)
+        return  max_ptr;
+    else
+        return NULL;
+}
+
+memoryList *bestfit(size_t requested)
+{
+    memoryList *current = head;
+    memoryList *bestfit = NULL;
+    int smallest_diff = -1; // Start value
+
+    while (current != NULL)
+    {
+        if (!current->alloc && current->size >= requested)
+        {
+            int diff = current->size - requested;
+
+            // Set smallest diff
+            if (smallest_diff == -1 || diff < smallest_diff)
+            {
+                smallest_diff = diff;
+                bestfit = current;
+            }
+        }
+        current = current->next;
+    }
+
+    // Return null if there is nothing found
+    if (smallest_diff == -1)
+        return NULL;
+
+    return bestfit;
+}
+
+memoryList *nextfit(size_t requested)
+{
+    memoryList *current = last_allocated;
+    if (current->next == NULL)
+        current = head;
+    else
+        current = last_allocated->next;
+
+    do
+    {
+        if (!current->alloc && current->size >= requested)
+        {
+            last_allocated = current;
+            return current;
+        }
+        if (current->next == NULL)
+            current = head;
+        else
+            current = current->next;
+    }
+    while (current != last_allocated->next);
+
+    return NULL;
 }
 
 
