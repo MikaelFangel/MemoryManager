@@ -26,6 +26,7 @@ void *allocate_block_of_memory(memoryList *blockPos, size_t requested_size);
 memoryList *firstfit(size_t requested);
 memoryList *find_block(void* block);
 void merge_left(memoryList *block);
+memoryList *worstfit(size_t requested);
 
 strategies myStrategy = NotSet;    // Current strategy
 
@@ -106,7 +107,7 @@ void *mymalloc(size_t requested)
         case Best:
             return NULL;
         case Worst:
-            return NULL;
+            return allocate_block_of_memory(worstfit(requested), requested);
         case Next:
             return NULL;
         default:
@@ -165,6 +166,35 @@ memoryList *firstfit(size_t requested) {
     return current;
 }
 
+memoryList *worstfit(size_t requested)
+{
+    memoryList *current, *maxptr;
+    maxptr = head;
+
+    // Find the first unallocated struct
+    while (maxptr != NULL && maxptr->alloc)
+        maxptr = maxptr->next;
+
+    // Return NULL if we couldn't find a free space
+    if (maxptr == NULL)
+        return maxptr;
+
+    current = maxptr;
+
+    // Find the maximum sized free block
+    while (current != NULL) {
+        if (current->size > maxptr->size && !current->alloc)
+            maxptr = current;
+        current = current->next;
+    }
+
+    // Check if the requested size fit in the maximum sized block
+    if (maxptr->size >= requested)
+        return  maxptr;
+    else
+        return NULL;
+}
+
 
 /* Frees a block of memory previously allocated by mymalloc. */
 void myfree(void* block)
@@ -191,6 +221,7 @@ void myfree(void* block)
         list_block->next->alloc && list_block->prev->alloc)
         goto unalloc_block;
 
+    // TODO: Logic clean up
     memoryList *tmp = list_block;
     if(list_block->prev != NULL && !list_block->prev->alloc)
         merge_left(list_block);
