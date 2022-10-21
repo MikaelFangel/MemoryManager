@@ -279,7 +279,7 @@ int test_alloc_2(int argc, char **argv) {
 
 		if (mem_allocated() != correct_alloc)
 		{
-			printf("Memory reported as %d, should be %d with %s\n", mem_allocated(0), correct_alloc, strategy_name(strategy));
+			printf("Memory reported as %d, should be %d with %s\n", mem_allocated(), correct_alloc, strategy_name(strategy));
 			return	1;
 		}
 

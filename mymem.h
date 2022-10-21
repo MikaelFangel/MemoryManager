@@ -35,16 +35,16 @@ void initmem(strategies strategy, size_t sz);
 void *mymalloc(size_t requested);
 void myfree(void* block);
 
-int mem_holes();
-int mem_allocated();
-int mem_free();
-int mem_total();
-int mem_largest_free();
+int mem_holes(void);
+int mem_allocated(void);
+int mem_free(void);
+int mem_total(void);
+int mem_largest_free(void);
 int mem_small_free(int size);
 char mem_is_alloc(void *ptr);
-void* mem_pool();
-void print_memory();
-void print_memory_status();
+void* mem_pool(void);
+void print_memory(void);
+void print_memory_status(void);
 void try_mymem(int argc, char **argv);
 
 void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_size);

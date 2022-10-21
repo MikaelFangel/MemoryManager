@@ -241,7 +241,7 @@ memoryList *nextfit(size_t requested)
  * corresponds to and then either freeing it or setting its value to unallocated
  * @param block the block in myMemory to free
  */
-void myfree(void* block)
+void myfree(void *block)
 {
     memoryList *block_to_unalloc = find_block(block);
     if (!block_to_unalloc)
@@ -261,24 +261,22 @@ void myfree(void* block)
 
     // In the middle if both sides of the block is allocated
     if (block_to_unalloc->next && block_to_unalloc->prev &&
-       block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
+        block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
         goto unalloc_block;
 
 
     memoryList *mergedBlock = block_to_unalloc;
     // Try to merge to the left
-    if (block_to_unalloc->prev && !block_to_unalloc->prev->alloc){
-         mergedBlock = merge_left(block_to_unalloc);
-    }
+    if (block_to_unalloc->prev && !block_to_unalloc->prev->alloc)
+        mergedBlock = merge_left(block_to_unalloc);
 
     // Try to go right and merge left again
-    if (mergedBlock->next && !mergedBlock->next->alloc){
+    if (mergedBlock->next && !mergedBlock->next->alloc)
         merge_left(mergedBlock->next);
-    }
     return;
 
     unalloc_block:
-        block_to_unalloc->alloc = false;
+    block_to_unalloc->alloc = false;
 }
 
 /**
@@ -286,7 +284,7 @@ void myfree(void* block)
  * @param block block in myMemory to find
  * @return the memory list pointer to that block
  */
-memoryList *find_block(void* block)
+memoryList *find_block(void *block)
 {
     memoryList *current;
     for(current = head; current; current = current->next)
@@ -331,7 +329,7 @@ memoryList *merge_left(memoryList *block_to_unalloc)
  */
 
 /* Get the number of contiguous areas of free space in memory. */
-int mem_holes()
+int mem_holes(void)
 {
     int count = 0;
     for (memoryList *current = head; current; current = current->next)
@@ -342,7 +340,7 @@ int mem_holes()
 }
 
 /* Get the number of bytes allocated */
-int mem_allocated()
+int mem_allocated(void)
 {
     size_t size = 0;
     for (memoryList *current = head; current; current = current->next)
@@ -353,13 +351,13 @@ int mem_allocated()
 }
 
 /* Number of non-allocated bytes */
-int mem_free()
+int mem_free(void)
 {
     return mem_total() - mem_allocated();
 }
 
 /* Number of bytes in the largest contiguous area of unallocated memory */
-int mem_largest_free()
+int mem_largest_free(void)
 {
     size_t max = 0;
     for (memoryList *current = head; current; current = current->next)
@@ -396,13 +394,13 @@ char mem_is_alloc(void *ptr)
 
 
 //Returns a pointer to the memory pool.
-void *mem_pool()
+void *mem_pool(void)
 {
     return myMemory;
 }
 
 // Returns the total number of bytes in the memory pool. */
-int mem_total()
+int mem_total(void)
 {
     return mySize;
 }
@@ -458,7 +456,7 @@ strategies strategyFromString(char * strategy)
  */
 
 /* Use this function to print out the current contents of memory. */
-void print_memory()
+void print_memory(void)
 {
     memoryList *current = head;
     while (current)
@@ -472,7 +470,7 @@ void print_memory()
  * This function does not depend on your implementation,
  * but on the functions you wrote above.
  */
-void print_memory_status()
+void print_memory_status(void)
 {
     printf("%d out of %d bytes allocated.\n",mem_allocated(),mem_total());
     printf("%d bytes are free in %d holes; maximum allocatable block is %d bytes.\n",mem_free(),mem_holes(),mem_largest_free());
@@ -490,13 +488,13 @@ void try_mymem(int argc, char **argv) {
 	  strat = strategyFromString(argv[1]);
 	else
 	  strat = First;
-	
-	
-	/* A simple example.  
+
+
+	/* A simple example.
 	   Each algorithm should produce a different layout. */
-	
+
 	initmem(strat,500);
-	
+
 	a = mymalloc(100);
 	b = mymalloc(100);
 	c = mymalloc(100);
@@ -504,8 +502,8 @@ void try_mymem(int argc, char **argv) {
 	d = mymalloc(50);
 	myfree(a);
 	e = mymalloc(25);
-	
+
 	print_memory();
 	print_memory_status();
-	
+
 }
