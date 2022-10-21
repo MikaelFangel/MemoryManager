@@ -461,7 +461,7 @@ void print_memory(void)
     memoryList *current = head;
     while (current)
     {
-        printf("Allocated: %s\tSize: %ld\tPtr: %p\n", current->alloc ? "true" : "false", current->size, current->ptr);
+        printf("Allocated: %s \tSize: %ld\tPtr: %p\n", current->alloc ? "true" : "false", current->size, current->ptr);
         current = current->next;
     }
 }
@@ -474,7 +474,7 @@ void print_memory_status(void)
 {
     printf("%d out of %d bytes allocated.\n",mem_allocated(),mem_total());
     printf("%d bytes are free in %d holes; maximum allocatable block is %d bytes.\n",mem_free(),mem_holes(),mem_largest_free());
-    printf("Average hole size is %f.\n\n",((float)mem_free())/mem_holes());
+    printf("Average hole size is %lf.\n\n",((double)mem_free())/mem_holes());
 }
 
 /* Use this function to see what happens when your malloc and free
