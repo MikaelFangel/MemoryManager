@@ -135,13 +135,10 @@ void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_s
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
 memoryList *firstfit(size_t requested) {
-    memoryList *current = head;
-    while (current)
-    {
+    memoryList *current;
+    for (current = head; current; current = current->next)
         if (!current->alloc && current->size >= requested)
             break;
-        current = current->next;
-    }
 
     return current;
 }
@@ -159,15 +156,10 @@ memoryList *worstfit(size_t requested)
     if (!max_ptr)
         return max_ptr;
 
-    current = max_ptr;
-
     // Find the maximum sized free block
-    while (current)
-    {
+    for (current = max_ptr; current; current = current->next)
         if (current->size > max_ptr->size && !current->alloc)
             max_ptr = current;
-        current = current->next;
-    }
 
     // Check if the requested size fit in the maximum sized block
     if (max_ptr->size >= requested)
@@ -178,11 +170,10 @@ memoryList *worstfit(size_t requested)
 
 memoryList *bestfit(size_t requested)
 {
-    memoryList *current = head;
     memoryList *bestfit = NULL;
     int smallest_diff = -1; // Start value
 
-    while (current)
+    for (memoryList *current = head; current; current = current->next)
     {
         if (!current->alloc && current->size >= requested)
         {
@@ -195,7 +186,6 @@ memoryList *bestfit(size_t requested)
                 bestfit = current;
             }
         }
-        current = current->next;
     }
 
     // Return null if there is nothing found
@@ -268,19 +258,16 @@ void myfree(void* block)
     }
     return;
 
-unalloc_block:
-    block_to_unalloc->alloc = false;
+    unalloc_block:
+        block_to_unalloc->alloc = false;
 }
 
 memoryList *find_block(void* block)
 {
-    memoryList *current = head;
-    while (current)
-    {
+    memoryList *current;
+    for(current = head; current; current = current->next)
         if (current->ptr == block)
             break;
-        current = current->next;
-    }
 
     return current;
 }
@@ -317,13 +304,9 @@ memoryList *merge_left(memoryList *block_to_unalloc)
 int mem_holes()
 {
     int count = 0;
-    memoryList *current = head;
-    while (current)
-    {
+    for (memoryList *current = head; current; current = current->next)
         if (!current->alloc)
             count++;
-        current = current->next;
-    }
 
     return count;
 }
@@ -332,13 +315,9 @@ int mem_holes()
 int mem_allocated()
 {
     int size = 0;
-    memoryList *current = head;
-    while (current)
-    {
+    for (memoryList *current = head; current; current = current->next)
         if (current->alloc)
             size += current->size;
-        current = current->next;
-    }
 
     return size;
 }
@@ -353,13 +332,9 @@ int mem_free()
 int mem_largest_free()
 {
     int max = 0;
-    memoryList *current = head;
-    while (current)
-    {
+    for (memoryList *current = head; current; current = current->next)
         if (!current->alloc && current->size > max)
             max = current->size;
-        current = current->next;
-    }
 
     return max;
 }
@@ -368,27 +343,18 @@ int mem_largest_free()
 int mem_small_free(int size)
 {
     int count = 0;
-    memoryList *current = head;
-    while (current)
-    {
+    for (memoryList *current = head; current; current = current->next)
         if (!current->alloc && current->size <= size)
             count++;
-        current = current->next;
-    }
 
     return count;
 }
 
 char mem_is_alloc(void *ptr)
 {
-    memoryList *current = head;
-    while (current)
-    {
+    for(memoryList *current = head; current; current = current->next)
         if (current->alloc && current->ptr == ptr)
             return '1';
-
-        current = current->next;
-    }
 
     return '0';
 }
