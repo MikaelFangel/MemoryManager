@@ -1,6 +1,5 @@
 #include "mymem.h"
 
-
 strategies myStrategy = NotSet;    // Current strategy
 
 size_t mySize;
@@ -9,30 +8,23 @@ void *myMemory = NULL;
 static memoryList *head;
 static memoryList *last_allocated;
 
-/* initmem must be called prior to mymalloc and myfree.
-
-   initmem may be called more than once in a given exeuction;
-   when this occurs, all memory you previously malloc'ed  *must* be freed,
-   including any existing bookkeeping data.
-
-   strategy must be one of the following:
-   - "best" (best-fit)
-   - "worst" (worst-fit)
-   - "first" (first-fit)
-   - "next" (next-fit)
-   sz specifies the number of bytes that will be available, in total, for all mymalloc requests.
+/**
+ * Initializes the memory and if called more than once it free the previous allocated memory
+ * @param strategy can be either "first", "next", "worst" or "best"
+ * @param sz how many bytes should be available for all malloc requests
  */
-
 void initmem(strategies strategy, size_t sz)
 {
     myStrategy = strategy;
 
+    // If not the first time initmem is called then we free the old myMemory
     if (myMemory)
     {
-        free(myMemory); /* in case this is not the first time initmem2 is called */
+        free(myMemory);
         myMemory = NULL;
     }
 
+    // If current is not null then it's not the first time, and we free the old allocations
     memoryList *current = head;
     memoryList *next;
     while (current)
@@ -42,11 +34,11 @@ void initmem(strategies strategy, size_t sz)
         current = next;
     }
 
-
-    /* all implementations will need an actual block of memory to use */
+    // Allocate an actual block of memory to be used by the memory manager
     mySize = sz;
     myMemory = malloc(sz);
 
+    // Initialize the data structure for the memory list
     head = (memoryList *) malloc(sizeof(memoryList));
     head->alloc = false;
     head->size = mySize;
@@ -56,12 +48,12 @@ void initmem(strategies strategy, size_t sz)
     last_allocated = head;
 }
 
-/* Allocate a block of memory with the requested size.
- *  If the requested block is not available, mymalloc returns NULL.
- *  Otherwise, it returns a pointer to the newly allocated block.
- *  Restriction: requested >= 1 
+/**
+ *  Allocate a block of memory with the requested size.
+ *  Restriction: requested >= 0
+ * @param requested the size need for the block that should be allocated
+ * @return the placement of the ptr in myMemory and NULL if no block was allocated
  */
-
 void *mymalloc(size_t requested)
 {
     assert((int)myStrategy > 0);
@@ -86,23 +78,30 @@ void *mymalloc(size_t requested)
     }
 }
 
+/**
+ * Allocated the actual block in the memory list and move all pointer to keep the list linked
+ * if the block to allocate size is the same at the requested size it overtakes the old block
+ * else it while split the unallocated block to the left and take residence in the left side
+ * this function have a side effect that updates the head due to the left splitting
+ * @param block_to_allocate the block that should be allocated found with a strategy
+ * @param requested_size the size to allocated the new block
+ * @return the pointer to the myMemory location of the new block
+ */
 void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_size)
 {
+    // Check the block received is a valid mem
     assert(block_to_allocate->size >= requested_size);
-    // Check the block recieved is a valid mem location
     if (!block_to_allocate)
         return NULL;
 
-    // If the position given is equal to the requested size
-    // then overtake the block and return a pointer
+    // If the position given is equal to the requested size then overtake the block and return the pointer
     if (block_to_allocate->size == requested_size)
     {
         block_to_allocate->alloc = true;
         return block_to_allocate->ptr;
     }
 
-    // Request block is smaller than the block to allocate and we therefore
-    // need to divide the memory into two
+    // Request block is smaller than the block to allocate, and we therefore need to divide the memory into two
     memoryList *split_block = (memoryList *) malloc(sizeof(memoryList));
 
     // Update head if we take its place with our split
@@ -130,7 +129,8 @@ void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_s
 }
 
 /**
- * Search the linked list from head until an unallocated block is found that is larger than or equal to the requsted size
+ * Search the linked list from head until an unallocated block is found that is larger than or
+ * equal to the requested size
  * @param requested size
  * @return memoryList ptr to the block of unallocated memory. Returns NULL if no block is found.
  */
@@ -143,6 +143,12 @@ memoryList *firstfit(size_t requested) {
     return current;
 }
 
+/**
+ * Search the memory list from head to the end and find the largest block free which
+ * is larger than or equal to the requested size.
+ * @param requested size of the block needed
+ * @return memory list pointer to the free block and null if no free block available
+ */
 memoryList *worstfit(size_t requested)
 {
     memoryList *current, *max_ptr;
@@ -168,6 +174,11 @@ memoryList *worstfit(size_t requested)
         return NULL;
 }
 
+/**
+ * Find the block with the best fit (the smallest difference in size) and return it
+ * @param requested size of the block needed
+ * @return memory list pointer to the free block and null if no free block available
+ */
 memoryList *bestfit(size_t requested)
 {
     memoryList *bestfit = NULL;
@@ -195,6 +206,11 @@ memoryList *bestfit(size_t requested)
     return bestfit;
 }
 
+/**
+ * Finds the first free block which fit the requested size from the location of the last allocated
+ * @param requested size of the block needed
+ * @return memory list pointer to the free block and null if no free block available
+ */
 memoryList *nextfit(size_t requested)
 {
     memoryList *current = last_allocated;
@@ -220,7 +236,11 @@ memoryList *nextfit(size_t requested)
     return NULL;
 }
 
-/* Frees a block of memory previously allocated by mymalloc. */
+/**
+ * Frees a block of memory previously allocated by mymalloc by find the memory list block that it
+ * corresponds to and then either freeing it or setting its value to unallocated
+ * @param block the block in myMemory to free
+ */
 void myfree(void* block)
 {
     memoryList *block_to_unalloc = find_block(block);
@@ -231,8 +251,7 @@ void myfree(void* block)
     if (!block_to_unalloc->next && !block_to_unalloc->prev)
         goto unalloc_block;
 
-    // If we are at head the next point needs to not be null
-    // to avoid looking at restricted memory
+    // If we are at head the next point needs to not be null to avoid looking at restricted memory
     if (block_to_unalloc == head && block_to_unalloc->next && block_to_unalloc->next->alloc)
         goto unalloc_block;
 
@@ -240,7 +259,7 @@ void myfree(void* block)
     if (!block_to_unalloc->next && block_to_unalloc->prev && block_to_unalloc->prev->alloc)
         goto unalloc_block;
 
-    // In the middle
+    // In the middle if both sides of the block is allocated
     if (block_to_unalloc->next && block_to_unalloc->prev &&
        block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
         goto unalloc_block;
@@ -262,6 +281,11 @@ void myfree(void* block)
         block_to_unalloc->alloc = false;
 }
 
+/**
+ * Finds the corresponding memory list pointer to a given block
+ * @param block block in myMemory to find
+ * @return the memory list pointer to that block
+ */
 memoryList *find_block(void* block)
 {
     memoryList *current;
@@ -272,6 +296,12 @@ memoryList *find_block(void* block)
     return current;
 }
 
+/**
+ * Merge two unallocated block but always to the left. Which means the block given should always be right of
+ * the block you want to merge with
+ * @param block_to_unalloc block right of the one you want to merge with
+ * @return the left side of the merge
+ */
 memoryList *merge_left(memoryList *block_to_unalloc)
 {
     // Update pointer to last allocated block if the old one gets merged.
@@ -296,7 +326,7 @@ memoryList *merge_left(memoryList *block_to_unalloc)
 
 /****** Memory status/property functions ******
  * Implement these functions.
- * Note that when refered to "memory" here, it is meant that the
+ * Note that when referred to "memory" here, it is meant that the
  * memory pool this module manages via initmem/mymalloc/myfree.
  */
 
@@ -314,7 +344,7 @@ int mem_holes()
 /* Get the number of bytes allocated */
 int mem_allocated()
 {
-    int size = 0;
+    size_t size = 0;
     for (memoryList *current = head; current; current = current->next)
         if (current->alloc)
             size += current->size;
@@ -331,7 +361,7 @@ int mem_free()
 /* Number of bytes in the largest contiguous area of unallocated memory */
 int mem_largest_free()
 {
-    int max = 0;
+    size_t max = 0;
     for (memoryList *current = head; current; current = current->next)
         if (!current->alloc && current->size > max)
             max = current->size;
