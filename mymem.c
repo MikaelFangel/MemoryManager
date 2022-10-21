@@ -71,7 +71,7 @@ void *mymalloc(size_t requested)
 
     switch (myStrategy)
     {
-        case NotSet: 
+        case NotSet:
             return NULL;
         case First:
             return allocate_block_of_memory(firstfit(requested), requested);
@@ -250,7 +250,7 @@ void myfree(void* block)
     if (block_to_unalloc->next == NULL && block_to_unalloc->prev != NULL && block_to_unalloc->prev->alloc)
         goto unalloc_block;
 
-    // In the middle 
+    // In the middle
     if (block_to_unalloc->next != NULL && block_to_unalloc->prev != NULL &&
        block_to_unalloc->next->alloc && block_to_unalloc->prev->alloc)
         goto unalloc_block;
@@ -488,21 +488,28 @@ void print_memory_status()
  * We have given you a simple example to start.
  */
 void try_mymem(int argc, char **argv) {
-    strategies strat;
-    void *a, *b, *c, *d, *e;
-    if (argc > 1)
-        strat = strategyFromString(argv[1]);
-    else
-        strat = Next;
-
-    initmem(strat, 100);
-
-    a=mymalloc(10);
-    b=mymalloc(10);
-    c=mymalloc(10);
-    d=mymalloc(10);
-    e=mymalloc(10);
-
-    myfree(e);
-    int tmp = (mem_free() / mem_holes());
+        strategies strat;
+	void *a, *b, *c, *d, *e;
+	if(argc > 1)
+	  strat = strategyFromString(argv[1]);
+	else
+	  strat = First;
+	
+	
+	/* A simple example.  
+	   Each algorithm should produce a different layout. */
+	
+	initmem(strat,500);
+	
+	a = mymalloc(100);
+	b = mymalloc(100);
+	c = mymalloc(100);
+	myfree(b);
+	d = mymalloc(50);
+	myfree(a);
+	e = mymalloc(25);
+	
+	print_memory();
+	print_memory_status();
+	
 }
