@@ -43,8 +43,7 @@ void initmem(strategies strategy, size_t sz)
     head->alloc = false;
     head->size = mySize;
     head->ptr = myMemory;
-    head->next = NULL;
-    head->prev = NULL;
+    head->next = head->prev = NULL;
     last_allocated = head;
 }
 
@@ -152,11 +151,10 @@ memoryList *firstfit(size_t requested) {
 memoryList *worstfit(size_t requested)
 {
     memoryList *current, *max_ptr;
-    max_ptr = head;
 
-    // Find the first unallocated struct
-    while (max_ptr && max_ptr->alloc)
-        max_ptr = max_ptr->next;
+    // Find the first unallocated struct and use it as the initial max
+    for(max_ptr = head; max_ptr && max_ptr->alloc; max_ptr = max_ptr->next)
+        ;
 
     // Return NULL if we couldn't find a free space
     if (!max_ptr)
