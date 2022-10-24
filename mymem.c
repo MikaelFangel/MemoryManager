@@ -186,7 +186,9 @@ memoryList *bestfit(size_t requested)
 
     for (memoryList *current = head; current; current = current->next)
     {
-        if (!current->alloc && current->size >= requested)
+        if (!current->alloc && current->size == requested)
+            return current;
+        if (!current->alloc && current->size > requested)
         {
             int diff = current->size - requested;
 
