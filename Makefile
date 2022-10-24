@@ -1,6 +1,6 @@
 CC = gcc
-CCOPTS = -c -g -Wall
-LINKOPTS = -g -lrt 
+CCOPTS = -c -s -O2 -Wall
+LINKOPTS = -s -lrt 
 
 EXEC=mem
 OBJECTS=testrunner.o mymem.o memorytests.o
