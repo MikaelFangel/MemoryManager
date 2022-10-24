@@ -27,30 +27,30 @@ typedef struct memoryList
     void *ptr;
 } memoryList;
 
-char *strategy_name(strategies strategy);
-strategies strategyFromString(char * strategy);
+char *strategy_name(strategies);
+strategies strategyFromString(char *);
 
 
-void initmem(strategies strategy, size_t sz);
-void *mymalloc(size_t requested);
-void myfree(void* block);
+void initmem(strategies, size_t);
+void *mymalloc(size_t);
+void myfree(void *);
 
 int mem_holes(void);
 int mem_allocated(void);
 int mem_free(void);
 int mem_total(void);
 int mem_largest_free(void);
-int mem_small_free(int size);
-char mem_is_alloc(void *ptr);
-void* mem_pool(void);
+int mem_small_free(int);
+char mem_is_alloc(void *);
+void *mem_pool(void);
 void print_memory(void);
 void print_memory_status(void);
-void try_mymem(int argc, char **argv);
+void try_mymem(int, char **);
 
-void *allocate_block_of_memory(memoryList *block_to_allocate, size_t requested_size);
-memoryList *merge_left(memoryList *block);
-memoryList *find_block(void* block);
-memoryList *firstfit(size_t requested);
-memoryList *worstfit(size_t requested);
-memoryList *bestfit(size_t requested);
-memoryList *nextfit(size_t requested);
+void *allocate_block_of_memory(memoryList *, size_t);
+memoryList *merge_left(memoryList *);
+memoryList *find_block(void *);
+memoryList *firstfit(size_t);
+memoryList *worstfit(size_t);
+memoryList *bestfit(size_t);
+memoryList *nextfit(size_t);
