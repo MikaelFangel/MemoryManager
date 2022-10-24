@@ -17,8 +17,12 @@ Original Author: L. Angrave
 #include "mymem.h"
 
 /* Constants */
-#define false (0)
-#define true (1)
+#ifndef false 
+    #define false (0)
+#endif
+#ifndef true
+    #define true (1)
+#endif
 #define test_killed (2)
 /* defaults */
 static int default_timeout_seconds=5;
